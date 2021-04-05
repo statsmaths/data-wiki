@@ -31,19 +31,31 @@ dir.create(".cache")
 ```{r}
 page <- wiki_get_page("List_of_largest_cities", "en")
 obj <- read_html(page$parse$text[[1]])
+
+table <- xml_find_all(obj, ".//table")[2]
+row <- xml_find_all(table, ".//tr")
+city <- xml_find_first(row, ".//td")
+
+xml_attr(xml_find_first(city, ".//a"), "href")
+xml_text(xml_find_first(row, ".//td"))
 ```
 
+
+
 ```{r}
+page <- wiki_get_page("List_of_largest_cities", "en")
+obj <- read_html(page$parse$text[[1]])
+
 city_table <- xml_find_all(obj, ".//table")[2]
 rows <- xml_find_all(city_table, ".//tr")
 city <- xml_find_first(rows, ".//td")
 
 df <- tibble(
-  city = stri_trim(stri_replace_all(xml_text(city), "", fixed = "\n")),
+  city = stri_trim(xml_text(city)),
   href = xml_attr(xml_find_first(rows, ".//a"), "href")
 ) %>% filter(!is.na(city), !is.na(href))
 
-df  
+df 
 ```
 
 ```{r}
