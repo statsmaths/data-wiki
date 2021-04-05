@@ -1,0 +1,59 @@
+---
+title: "Make Pagelists"
+output:
+  html_document:
+    theme: cosmo
+    highlight: zenburn
+    css: "note-style.css"
+---
+
+```{r message=FALSE, include=FALSE}
+library(tidyverse)
+library(forcats)
+library(ggrepel)
+library(smodels)
+library(cleanNLP)
+library(glmnet)
+library(magrittr)
+library(stringi)
+library(xml2)
+
+theme_set(theme_minimal())
+options(dplyr.summarise.inform = FALSE)
+options(width = 77L)
+
+source("../funs.R")
+dir.create(".cache")
+```
+
+## Cities
+
+```{r}
+page <- wiki_get_page("List_of_largest_cities", "en")
+obj <- read_html(page$parse$text[[1]])
+```
+
+```{r}
+city_table <- xml_find_all(obj, ".//table")[2]
+rows <- xml_find_all(city_table, ".//tr")
+city <- xml_find_first(rows, ".//td")
+
+df <- tibble(
+  city = stri_trim(stri_replace_all(xml_text(city), "", fixed = "\n")),
+  href = xml_attr(xml_find_first(rows, ".//a"), "href")
+) %>% filter(!is.na(city), !is.na(href))
+
+df  
+```
+
+```{r}
+page_list <- tibble(
+  group = "city",
+  name = stri_sub(df$href, 7, -1),
+  lang = "en"
+)
+```
+
+
+
+
